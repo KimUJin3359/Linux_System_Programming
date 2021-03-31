@@ -1,5 +1,17 @@
 # Linux_System_Programming
 
+### 목차
+- [용어사전](https://github.com/KimUJin3359/Linux_System_Programming#%EC%9A%A9%EC%96%B4%EC%82%AC%EC%A0%84)
+- [컴퓨터 시스템](https://github.com/KimUJin3359/Linux_System_Programming#%EC%BB%B4%ED%93%A8%ED%84%B0-%EC%8B%9C%EC%8A%A4%ED%85%9C)
+- [임베디드 시스템 제어 프로그램](https://github.com/KimUJin3359/Linux_System_Programming#%EC%9E%84%EB%B2%A0%EB%94%94%EB%93%9C-%EC%8B%9C%EC%8A%A4%ED%85%9C-%EC%A0%9C%EC%96%B4-%ED%94%84%EB%A1%9C%EA%B7%B8%EB%9E%A8)
+- [시스템 구성요소](https://github.com/KimUJin3359/Linux_System_Programming#%EC%8B%9C%EC%8A%A4%ED%85%9C-%EA%B5%AC%EC%84%B1%EC%9A%94%EC%86%8C)
+- [Thread Programming](https://github.com/KimUJin3359/Linux_System_Programming#thread-programming)
+- [Low-level 파일 입출력](https://github.com/KimUJin3359/Linux_System_Programming#low-level-%ED%8C%8C%EC%9D%BC-%EC%9E%85%EC%B6%9C%EB%A0%A5)
+- [Process](https://github.com/KimUJin3359/Linux_System_Programming#process)
+- [Virtual Address Space](https://github.com/KimUJin3359/Linux_System_Programming#virtual-address-space)
+
+---
+
 ### 용어사전
 - **컴퓨터 시스템** : **범용 기능**을 수행하도록 만들어진 시스템
 - **임베디드 시스템** : **전용 기능**을 수행하도록 만들어진 시스템
@@ -12,6 +24,11 @@
 - **Load** : 저장장치에서 메모리로 데이터를 옮기는 작업
 - **System Call** : Kernel에서 App을 만들 때 지원하는 API
 - Device Driver : 장치를 관리하기위한 소프트웨어
+- **프로그램** : **명령어의 집합**
+- **프로세서**: **프로그램을 실행하는 칩셋**
+- **프로세스** : **실행된 프로그램**
+- 프로세스 세그먼트 : Text, Data, Bss, Stack, Heap
+---
 
 ### 컴퓨터 시스템
 #### 시스템의 이해
@@ -27,6 +44,8 @@
   - HW : Firmware or OS 필요
 - 맞춤형 전용 시스템이기에 범용 APP을 만들기 힘듦
 ![4](https://user-images.githubusercontent.com/50474972/112774649-42ba2180-9075-11eb-9510-2a8dcf2ace04.png)
+
+---
 
 ### 시스템 개발 트렌드
 - OS
@@ -59,6 +78,8 @@
   - Android가 무겁기 때문
   - 고성능 HW에서만 Android 사용 가능 
  
+---
+
 ### 임베디드 시스템 제어 프로그램
 #### Firmware
 - 임베디드 산업에서 가장 큰 비중 차지
@@ -81,6 +102,8 @@
 
 #### Android
 - 컴퓨터나 다를 것이 없음
+
+---
 
 ### 시스템 구성요소
 #### 컴퓨팅 시스템
@@ -127,6 +150,8 @@
 - MCU(임베디드, ARM Core 사용) : 마이크로칩스(SOC), ST 마이크로 일렉트로닉스(SOC), NXP(SOC)
 - SoC 생산 : TSMC, 삼성
 
+---
+
 ### Thread Programming
 - **한 프로세스**에서 특정 함수를 동시에 동작 시키고 싶을 때 사용
   - Pthread 라이브러리 사용
@@ -156,6 +181,8 @@ pthread_mutex_lock(&lock);
 ...
 pthread_mutex_unlock(&lock);
 ```
+
+---
 
 ### Low Level 파일 입출력
 #### 리눅스에서의 파일
@@ -254,6 +281,8 @@ pthread_mutex_unlock(&lock);
   - open, write, lseek 등 존재
   - **임베디드에서 Device File을 다뤄야 하기 때문에 사용**
 
+---
+
 ### Process
 #### 프로세스 용어 정리
 - **프로그램** : **명령어의 집합**
@@ -306,3 +335,4 @@ pthread_mutex_unlock(&lock);
     # 종료
     hd '파일'
     ```
+---
