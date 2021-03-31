@@ -26,8 +26,10 @@
 - Device Driver : 장치를 관리하기위한 소프트웨어
 - **프로그램** : **명령어의 집합**
 - **프로세서**: **프로그램을 실행하는 칩셋**
-- **프로세스** : **실행된 프로그램**
+- **프로세스** : **실행된 프로그램**, 리눅스의 task
 - 프로세스 세그먼트 : Text, Data, Bss, Stack, Heap
+- Task : 스케쥴링을 하는 단위
+- MMU : phyiscal memory를 virtual memory로 변
 ---
 
 ### 컴퓨터 시스템
@@ -303,6 +305,7 @@ pthread_mutex_unlock(&lock);
 - bss : 초기화되지 않은 전역
 - stack : 정적 변수(지역변수, 매개변수)
 - heap : 동적 변수
+9- 로드될 때 text, data는 복사되고, bss, heap, stack은 공간만 만들어 둠
 
 #### 임베디드 프로세스
 - Firmware
@@ -315,6 +318,9 @@ pthread_mutex_unlock(&lock);
   - -e 옵션 : 커널 프로세스를 제외한 모든 프로세스 출력
   - -f 옵션 : full format/ PID 등 모든 정보 출력
 2. top
+  - htop 
+  - 스케쥴링하는 단위를 task라고 함
+  - 리눅스에서 task는 process
 
 #### Virtual Address Space
 - 각 프로세스는 연속적인 메모리 공간을 사용하고 있다고 착각하도록 함
@@ -322,6 +328,7 @@ pthread_mutex_unlock(&lock);
 - 장점
   - 메모리 파편화에대한 구현이 쉬워짐
   - 저장장치를 메모리인양 사용가능(swap 영역)
+- MMU : phyiscal memory를 virtual memory로 변환
 
 #### gdb
 - 리눅스의 디버깅 도구
@@ -336,3 +343,30 @@ pthread_mutex_unlock(&lock);
     hd '파일'
     ```
 ---
+
+### Context Switch
+#### Process Scheduling
+- 하나의 Core는 여러개의 프로세스를 순환하면서 수행
+  - 특정 시간마다 번갈아가면서 수행
+  - 대체로, RR로 동작하며 OS마다의 계산 공식에 의해 우선순위가 변경됨
+- 프로세스 간 메모리는 독립적으로 운영
+  - Virtual Address와 Physical Address가 존재
+  - 각자의 가상 메모리 주소 영역을 갖음
+- IPC(Inter Process Communication)
+  - 어떤 프로그램이 다른 프로그램에게 값을 전달하고자 할 때 사용
+  1) 프로세스끼리 공유하는 메모리를 사용
+  2) 커널의 도움을 받아 대신 전달해주는 방법 사용
+
+#### PCB(Process Control Block)
+- 커널이 프로세스를 제어하기 위한 정보를 저장하는 블록
+- 프로세스 descriptor라고도 불림
+- 저장정보
+  - 프로세스 상태, PID 등
+  - 프로세스에 대한 다양한 정보들을 보관
+
+#### Context Switching
+- 자주 발생한다면 동시에 수행되는 것처럼 보임
+  - 사용성이 좋아짐
+  - 레지스터 복원, 복구 횟수가 잦아짐
+- 적절한 스케쥴링 정책이 필요
+ 
