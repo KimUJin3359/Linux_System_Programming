@@ -501,3 +501,80 @@ pthread_mutex_unlock(&lock);
   - F5 : Tree로 보기
   - Shift + H : User Thread 보기
   - Shift + K : Kernel Thread 
+
+---
+
+### Timer
+#### UTC
+- 국제 표준 시간
+- 1972년부터 시행
+- UTC + offset으로 시간표시
+- 한국(KST) : ofsset(9)
+
+#### RTC(Real Time Clock)
+- 전원이 없어도 시간을 계산 함
+- 수은 건전지 사용
+
+#### 리눅스
+- date
+  - 부팅시 RTC 정보를 받아 리눅스에서 시간정보 관리
+  - 네트워크에 연결될 때, Time 서버에서 자동으로 시간을 업데이트
+- hwclock
+  - RTC HW 장치가 가지고 있는 시간 정보 값
+  - 리눅스에서는 date와 RTC가 같지 않으면 sync를 맞춰줘야함
+  - 인터넷 Time 서버에서 시간값 가져와 sync 맞추기
+    - sudo apt install rdate
+    - sudo rdate time.bora.net
+    - sudo hwclock -s : 시스템 시간 기준 RTC 시간 변경
+    - sudo hwclock -w : RTC 시간 기준 시스템 시간 변경
+
+#### time system call
+- time_t time(NULL) : 1970년 1월 1일 0시 0분 0초부터 현재까지 지난 초
+- time_t type : 64bit unsigned int
+- localtime system call을 사용하면, 보기편한 정보로 확인 가능
+  - struct tm : 현재 시간을 나타내는 구조체
+    - 초, 분, 시간, 일, 월, 년
+  - localtime()
+    - time_t -> tm으로 변경
+  ```
+  struct tm {
+  int tm_sec;
+  int tm_min;
+  int tm_hour;
+  int tm_mday;
+  int tm_mon;
+  int tm_year;
+  int tm_wday;
+  int tm_yday;
+  int tm_isdst;
+  };
+  ```
+  
+#### clock system call
+- clock_t clock() : CPU clock이 아닌, process clock
+  - 현재 프로세스가 시작되고 얼마나 시간이 흘렀는지를 반환
+- clock_t type : long
+- CLOCKS_PER_SEC 매크로 : 1초당 시스템 clock이 올라가는 정도(Windows : 1000, Linux : 1000000)를 나타냄
+
+#### gettimeofday system call
+- int gettimeofday(struct timeval \*tv, struct timezone \*tz
+  - time system call과 같이 1970년 1월 1일로부터 지난 초를 얻어옴
+  - time system call과 다르게 us단위로 정밀한 현재 시간을 얻을 수 있음
+  - timeval, timezone 변수를 만들어 넣으면 system call이 적절한 값을 채워줌
+  ```
+  struct timeval
+  {
+    time_t tv_sec;
+    suseconds_t tv_usec;
+  }
+  ```
+  
+#### Latency 값 구하기
+- Latency
+  - 자극과 반응 시간
+  - 신호 전달 후 Response 시간
+  - 함수 호출 후 리턴까지 시간
+
+---
+
+### Signal 
