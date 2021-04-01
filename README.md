@@ -29,7 +29,9 @@
 - **프로세스** : **실행된 프로그램**, 리눅스의 task
 - 프로세스 세그먼트 : Text, Data, Bss, Stack, Heap
 - Task : 스케쥴링을 하는 단위
-- MMU : phyiscal memory를 virtual memory로 변
+- MMU : phyiscal memory를 virtual memory로 변경하는 역할
+- Kernel Thread : Kerner Space에서 생성되는 프로세스
+
 ---
 
 ### 컴퓨터 시스템
@@ -292,43 +294,79 @@ pthread_mutex_unlock(&lock);
 - **프로세스** : **실행된 프로그램**
 
 #### 프로세스
-- 리눅스를 부팅하면 최초의 프로세스가 존재하고, 모두 복제되어 생성
-- 각 프로세스는  PID가 존재
+- 리눅스를 부팅하면 **최초의 프로세스가 존재하고, 모두 복제되어 생성**
+- **각 프로세스는  PID가 존재**
 - 부모 프로세스와 자식 프로세스가 존재
   - 자식 프로세스는 부모의 PID 값을 알고있음(PPID)
   - 부모 프로세스는 자식의 PID를 알지 못함
 
 #### 프로세스 구성
-- 하나의 프로세스는 text, data, bss, stack, heap의 세그먼트로 구성
+- 하나의 프로세스는 **text, data, bss, stack, heap의 세그먼트**로 구성
 - text : 코드
 - data : 초기화된 전역
 - bss : 초기화되지 않은 전역
 - stack : 정적 변수(지역변수, 매개변수)
 - heap : 동적 변수
-9- 로드될 때 text, data는 복사되고, bss, heap, stack은 공간만 만들어 둠
+- 로드될 때 text, data는 복사되고, bss, heap, stack은 공간만 만들어 둠
+
+#### 프로세스의 탄생
+- 0번 Process : 처음 태어난 프로세스
+  - swapper
+    - 오랫동안 사용하지 않은 **메모리를 디스크로 저장하는 SWAP 역할**
+    - SWAP코드에서 PID 0번을 자기자신에게 부여
+    - **PID 1, 2 번 생성**
+  - 커널 자체이므로 프로세스 리스트에서 생략
+- 1번 Process(**init Process**) : **User Space의 조상 프로세스**
+  - init 프로세스가 fork 후 exec를 수행하여 독립적인 자식들을 생성
+  - 역할
+    - File System 마운트
+    - Daemon 수행
+    - Run level에 맞게 Shell 수행
+    - 사용자 Login 대기
+    - Shell 띄우기
+- 2번 Process(**kthreadd**) : **Kernel Space의 조상 프로세스**
+  - Kernel Space 내 생성되는 프로세스를 Kernel Thread라고 함
+  - Kernel Thread를 생성
+
+#### 프로세스 생성 Systemcall
+- 방법 1 : fork
+- 방법 2 : fork + exec
+- fork
+  - 자식을 낳음
+  - 부모의 **메모리 내용을 자식에게 똑같이 복사**
+- exec
+  - 현재 프로세스를 **새로운 프로세스로 변경**
+  - system("") 함수와 다르게 동작
+    - **system함수는 프로세스 수행 후 돌아옴**
+    - **exec는 현재 프로세스가 해당 프로세스로 바뀌어**, 새로운 프로그램 동작이 시작됨
+- execl
+  - execl("경로", "인자들", ... , NULL)
+    - 인자가 없는 경우 ""를 하나 넣어주어야 함
+    - 마지막에 NULL을 넣어주어야 함
+  - execl이 실패하면 기존의 함수 실행
+  - execl이 성공하면 현재 프로세스가 바뀜
+- pid_wait
+  - pid_wait(status)
+  - 자식 프로세스 중 아무거나 끝나기를 기다림
+  - 정리완료된 자식 프로세스의 pid 리턴
+- wait_pid
+  - wait_pid(pid, 0, 0);
+  - 특정 pid가 끝나길 
 
 #### 임베디드 프로세스
 - Firmware
-  - 단일 프로세스
+  - **단일 프로세스**
   - 프로세스가 끝나면 기기가 정지
   - 멀티 테스킹, 멀티 프로세싱이 필요할때는 RTOS, Linux급을 선택 
 
 #### PID 확인
-1. ps -ef
+1. **ps -ef**
   - -e 옵션 : 커널 프로세스를 제외한 모든 프로세스 출력
   - -f 옵션 : full format/ PID 등 모든 정보 출력
-2. top
+2. **top**
   - htop 
   - 스케쥴링하는 단위를 task라고 함
   - 리눅스에서 task는 process
-
-#### Virtual Address Space
-- 각 프로세스는 연속적인 메모리 공간을 사용하고 있다고 착각하도록 함
-  - 실제 물리적 주소와 다름
-- 장점
-  - 메모리 파편화에대한 구현이 쉬워짐
-  - 저장장치를 메모리인양 사용가능(swap 영역)
-- MMU : phyiscal memory를 virtual memory로 변환
 
 #### gdb
 - 리눅스의 디버깅 도구
@@ -346,27 +384,115 @@ pthread_mutex_unlock(&lock);
 
 ### Context Switch
 #### Process Scheduling
-- 하나의 Core는 여러개의 프로세스를 순환하면서 수행
+- 멀티 프로세스 환경에서 하나의 CPU에 여러 프로세스를 수행하는 방법을 제시
+- 하나의 Core는 **여러개의 프로세스를 순환하면서 수행**
   - 특정 시간마다 번갈아가면서 수행
   - 대체로, RR로 동작하며 OS마다의 계산 공식에 의해 우선순위가 변경됨
 - 프로세스 간 메모리는 독립적으로 운영
-  - Virtual Address와 Physical Address가 존재
+  - **Virtual Address와 Physical Address**가 존재
   - 각자의 가상 메모리 주소 영역을 갖음
-- IPC(Inter Process Communication)
-  - 어떤 프로그램이 다른 프로그램에게 값을 전달하고자 할 때 사용
+- **IPC(Inter Process Communication)**
+  - 어떤 프로그램이 다른 프로그램에게 **값을 전달**하고자 할 때 사용
   1) 프로세스끼리 공유하는 메모리를 사용
   2) 커널의 도움을 받아 대신 전달해주는 방법 사용
 
 #### PCB(Process Control Block)
-- 커널이 프로세스를 제어하기 위한 정보를 저장하는 블록
-- 프로세스 descriptor라고도 불림
+- 커널이 **프로세스를 제어하기 위한 정보를 저장하는 블록**
+- **Process descriptor**라고도 불림
+- 주어진 시간이 다하여 다음 프로세스를 수행해야할 때, register 값들을 저장
+  - Program Counter Register가 정상적으로 보구되어 끊겼던 곳 부터 이어서 수행이 가능함
 - 저장정보
   - 프로세스 상태, PID 등
-  - 프로세스에 대한 다양한 정보들을 보관
+  - 프로세스에 대한 다양한 정보들을 보관(register 값)
 
 #### Context Switching
+- **Process 끼리 전환**을 Context Switching이라 함
+- Process
 - 자주 발생한다면 동시에 수행되는 것처럼 보임
   - 사용성이 좋아짐
   - 레지스터 복원, 복구 횟수가 잦아짐
 - 적절한 스케쥴링 정책이 필요
+
+---
+
+### Process State
+- **Run Queue**
+  - 우선순위 값에 따라 스케쥴러가 먼저 수행할 것을 결정 지을 수 있는 후보들이 존재하는 큐
+  - Run Queue에서 탈출 : I/O 응답 대기하거나, 종료 신호 발생 시
+- **Running state(R)**
+  - Context Switching으로 선택된 하나의 프로세스만 수행
+  - 나머지 프로세스들은 Runnable (Ready) 상태에 있음
+- **Uninterruptible Sleep state(D)**
+  - 깨울 수 없는 sleep
+  - 특정한 system call 호출 시 발생하는 state
+  - mkdir 사용 시 응답이 올 떄 까지 대기
+- **Interruptible Sleep state(S)**
+  - 일반적인 sleep
+    - sleep system call 사용 시
+    - I/O 처리 후 응답 대기
+    - timer 사용 시
+- **Stopped state(T)**
+  - SIGSTOP signal 사용 시
+    - ctrl + z
+    - kill -SIGSTOP 'PID'
+  - SIGCONT signal 사용 시 다시 동작
+- **Zombie state(Z)**
+  - 하나의 프로세스는 자식 프로세스를 생성 가능(fork system call)
+  - 자식이 죽으면 부모가 자식의 Process Descriptor(PCB) 제거
+  - 부모 프로세스와 자식 프로세스가 있을 때 자식 프로세스가 먼저 끝난 경우
+    - 자식 프로세스의 Process Descriptor가 남아있음(Zombie state)
+    - 부모에게 SIGCHLD Signal을 보냄
+    - 부모 프로세스가 SIGCHLD를 받으면 wait system call을 호출하여 자식의 Process Descriptor 제거
+![프로세스](https://user-images.githubusercontent.com/50474972/113254049-0ef32c00-9301-11eb-8b0c-29222da2f7de.png)
+
+#### Zombie state
+- fork
+  - fork 수행 시, 자식 프로세스는 pid가 0으로 됨
+  - 자식 프로세스를 갖는 부모 프로세스가 pid를 받음
+  ```
+  pid_t child_pid = fork();
+  if (child_pid > 0)
+    // 부모 프로세스
+  else if (child_pid == 0)
+    // 자식 프로세스
+  ```
+
+---
+
+### Process의 가상 메모리
+#### Virtual Memory
+- **각 프로세스들에게 제공되는 용량**
+  - 실제 물리적 메모리보다 **더 큰 사이즈의 메모리를 쓸 수 있게 함**
+  - 동시에 모든 메모리를 사용하는 일이 없기에 **자주 안쓰는 메모리를 HDD에 임시적으로 저장**
+  - 만약의 사태에 대비해, **하드디스크를 메모리처럼 쓰는 SWAP 영역을 잡아서 사용**
+- 장점
+  - 모든 프로세스는 메모리 Address를 0x0000 0000 부터 사용 가능
+  - 다른 프로세스가 쓰는 메모리가 있더라도 **신경쓰지 않고, 메모리를 사용**
+
+#### Physical Memory
+- DIMM(마더보드 부착형) 형태의 DRAM
+
+#### MMU
+- **가상 메모리를 사용하기위한 주소 장치 제공**
+- **phyiscal memory를 virtual memory로 변환**
+- MMU가 없다면
+  - 임베디드 커널 포팅 불가
+  - OS말고 Firmware를 구현해야 됨
  
+#### Virtual Address Space
+- 각 프로세스는 **연속적인 메모리 공간을 사용하고 있다고 착각**하도록 함
+  - 실제 물리적 주소와 다름
+- 장점
+  - 메모리 파편화에대한 구현이 쉬워짐
+  - 저장장치를 메모리인양 사용가능(swap 영역)
+
+#### htop 사용
+- 메모리 필드
+  - RES : Process가 사용중인 Physical memory 사이즈
+  - VIRT : Process가 사용중인 Virtual memory 사이즈
+  - SHR : Process가 사용중인 Shared memory 사이즈
+
+- 단축키
+  - F5 : Tree로 보기
+  - Shift + H : User Thread 보기
+  - Shift + K : Kernel Thread 
