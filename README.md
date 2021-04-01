@@ -31,13 +31,17 @@
 - **프로그램** : **명령어의 집합**
 - **프로세서**: **프로그램을 실행하는 칩셋**
 - **프로세스** : **실행된 프로그램**, 리눅스의 task
-- 프로세스 세그먼트 : Text, Data, Bss, Stack, Heap
+- 프로세스 세그먼트 : **Text, Data, Bss, Stack, Heap**
 - Task : 스케쥴링을 하는 단위
-- MMU : phyiscal memory를 virtual memory로 변경하는 역할
+- MMU : phyiscal memory를 **virtual memory로 변경**하는 역할
 - Kernel Thread : Kerner Space에서 생성되는 프로세스
-- IPC : 프로세스간의 데이터 교환 방식
-- PCB(Process Descriptor) : 프로세스를 제어하기 위한 정보를 저장하는 블록
-- Virtual Memory : 각 프로세스들에게 
+- **Context Switch** : 한 프로세스에서 다음 프로세스로 **작업을 변경하는 것** 
+- **IPC** : 프로세스간의 데이터 교환 방식
+- **PCB(Process Descriptor)** : 프로세스를 제어하기 위한 **정보를 저장하는 블록**
+- **Virtual Memory** : 각 프로세스들에게 부여되는 가상의 메모리
+- **Interrupt** : 실행 중인 프로그램을 잠시 멈추고, Interrupt에 따른 작업 수행을 하도록 하는 것
+- **Interrupt Handler(ISR)** : 해당 interrupt의 처리 방법(함수)
+- **Signal** : Thread, Process에 정보를 전달하는 Interrupt의 한 종류 
 
 ---
 
@@ -581,10 +585,9 @@ pthread_mutex_unlock(&lock);
 
 ### Signal 
 #### Interrupt
-- CPU가 동작하는 중 하던 일을 멈추고 다른 작업을 하도록 하는 것
+- CPU가 동작하는 중 하던 일을 멈추고 **다른 작업**을 하도록 하는 것
 - Interrupt 발생 시 예약된 함수(ISR)가 동작
-- ISR(Interrupt Service Routine) : 인터럽트 핸들러가 부르는 함수
-- Interrupt Handler : 모든 interrupt에 대한 처리 방법
+- Interrupt Handler(ISR) : interrupt에 대한 처리 방법
   - Handler를 지정해주지 않으면, 커널 내부에서 Default 동작을 수행함
 
 #### Signal
