@@ -578,3 +578,27 @@ pthread_mutex_unlock(&lock);
 ---
 
 ### Signal 
+#### Interrupt
+- CPU가 동작하는 중 하던 일을 멈추고 다른 작업을 하도록 하는 것
+- Interrupt 발생 시 예약된 함수(ISR)가 동작
+- ISR(Interrupt Service Routine) : 인터럽트 핸들러가 부르는 함수
+- Interrupt Handler : 모든 interrupt에 대한 처리 방법
+  - Handler를 지정해주지 않으면, 커널 내부에서 Default 동작을 수행함
+
+#### Signal
+- Thread, Process에게 정보를 전달하는 신호
+- Linux에서는 최대 256개 신호까지 전달할 수 있음
+  - signal 종류 : kill -l
+- 단순한 정보를 보낼 때 사용
+- Interrupt의 일종
+
+#### Signal API
+- signal('시그널 번호', '핸들러 이름');
+- 시그널 번호는 매크로로 사용해도 됨(전부 등록되어 있음)
+- Nestted Interrupt
+  - ARM
+    - 인터럽트에 우선순위가 존재 ( 낮은번호가 우선순위가 더 높음 )
+    - 우선순위가 높은 Interrupt 발생 시 Nested Interrupt
+  - Linux
+    - 우선순위가 존재하지 않음
+    - 인터럽트 동작 중 인터럽트 발생 시 Nested Interrupt
