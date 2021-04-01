@@ -8,7 +8,9 @@
 - [Thread Programming](https://github.com/KimUJin3359/Linux_System_Programming#thread-programming)
 - [Low-level 파일 입출력](https://github.com/KimUJin3359/Linux_System_Programming#low-level-%ED%8C%8C%EC%9D%BC-%EC%9E%85%EC%B6%9C%EB%A0%A5)
 - [Process](https://github.com/KimUJin3359/Linux_System_Programming#process)
-- [Virtual Address Space](https://github.com/KimUJin3359/Linux_System_Programming#virtual-address-space)
+- [Context Switch](https://github.com/KimUJin3359/Linux_System_Programming/blob/master/README.md#context-switch)
+- [Process State](https://github.com/KimUJin3359/Linux_System_Programming/blob/master/README.md#process-state)
+- [Virtual Memory](https://github.com/KimUJin3359/Linux_System_Programming/blob/master/README.md#process%EC%9D%98-%EA%B0%80%EC%83%81-%EB%A9%94%EB%AA%A8%EB%A6%AC)
 
 ---
 
@@ -31,6 +33,9 @@
 - Task : 스케쥴링을 하는 단위
 - MMU : phyiscal memory를 virtual memory로 변경하는 역할
 - Kernel Thread : Kerner Space에서 생성되는 프로세스
+- IPC : 프로세스간의 데이터 교환 방식
+- PCB(Process Descriptor) : 프로세스를 제어하기 위한 정보를 저장하는 블록
+- Virtual Memory : 각 프로세스들에게 
 
 ---
 
