@@ -43,6 +43,8 @@
 - **Interrupt** : 실행 중인 프로그램을 잠시 멈추고, Interrupt에 따른 작업 수행을 하도록 하는 것
 - **Interrupt Handler(ISR)** : 해당 interrupt의 처리 방법(함수)
 - **Signal** : Thread, Process에 정보를 전달하는 Interrupt의 한 종류 
+- Race Condition : Thread, Process의 타이밍에 따라 결과 값이 달라질 수 있는 상태
+- Critical Section : Thread, Process가 동시에 접근해서는 안되는 곳
 
 ---
 
@@ -686,8 +688,8 @@ volatile unsigned int *p = (volatile unsigned int *)'주소값';
   - Pthread 라이브러리 사용
   - gcc -lpthread 옵션 사용
 - 쓰레드 메모리 사용
-  - bss, data, text는 같은 공간을 사용
-  - stack, heap은 쓰레드마다 독립적인 공간을 사용
+  - **bss, data, text는 같은 공간**을 사용
+  - **stack, heap은 쓰레드마다 독립적인 공간**을 사용
   ```
   static 변수는 data, bss영역에 할당되기 때문에 쓰레드 끼리 공유 가능
   
@@ -708,11 +710,11 @@ volatile unsigned int *p = (volatile unsigned int *)'주소값';
   ```
 
 #### Thread 특징
-- Thread의 ID를 따로 관리
-- Thread끼리 우선순위가 존재
+- **Thread의 ID를 따로 관리**
+- Thread끼리 **우선순위**가 존재
 - Thread끼리 사용할 수 있는 stack의 사이즈를 결정할 수 있음
-- 리눅스에서는 Process 단위가 아닌 Thread 단위 스케쥴링
-  - task : 스케쥴러의 
+- 리눅스에서는 Process 단위가 아닌 **Thread 단위 스케쥴링**
+  - task : 스케쥴러의 단위를 뜻함
   - Kernel에서 쓰는 Thread와 User Thread 모두 스케쥴링
   ![프로세스(1)](https://user-images.githubusercontent.com/50474972/113382688-16780b00-93bd-11eb-95b2-e59842192d44.png)
 - Thread Control Block 개념
@@ -760,6 +762,30 @@ pthread_mutex_lock(&lock);
 pthread_mutex_unlock(&lock);
 ```
 
+#### Thread Library
+- glibc : C 표준 Library
+  - GNU C Library
+  - 리눅스 system call을 wrapping
+  - PC를 위한 구현
+  - glibc 이름 : libc-2.31.so
+- newlib : 임베디드를 위한 C 표준 Library
+  - 경량으로 제작됨
+  - Free RTOS, GNU GCC에 사용 됨
+- nanolib : newlib보다 더 작은 C 표준 Library
+  - GNU Gcc에 사용 됨
+- NPTL : glibc에서 사용하는 Library
+  - Native POSIX Thread Library
+  - glibc의 pthread를 구현
+  - 1 : 1 Thread Model을 사용
+    - User Level Thread와 Kernel Level Thread가 1:1로 매핑
+    - 병렬 Core 동작에 유리, System Call 발생 시 User Thread 동작 정지 없음
+
+#### 임베디드에서 Thread
+- Firmware : Thread 사용 불가
+- RTOS : Thread 지원
+- Linux : 병렬 프로세싱 Thread 지원은 함
+- Android : 병렬 프로세싱 Thread 사용
+
 #### Mutli Thread vs Multi Process
 
 | | Multi Thread | Mutli Process |
@@ -769,3 +795,78 @@ pthread_mutex_unlock(&lock);
 | 메모리 | 공유 리소스 issue 발생 | 메모리가 독립적으로 보호됨 |
 
 ---
+
+### Thread 응용
+#### Queue
+- Thread끼리 통신을 할 때 사용하는 큐
+  - 큐에 접근할 때 동기화 필요
+    - Linked List로 구현
+  - 큐가 꽉 차는 경우, Block 발생
+  - push, pop 사용 시 동기화
+
+#### Pipeline
+- 각 단계로 이동할 때 병목현상을 없애고자 Queue를 사용
+- 전용 대기 큐가 존재하고, 처리하는 쓰레드가 존재
+
+#### Manager / Worker
+- Manager가 Worker에게 작업을 분배
+  - Manager가 Worker에게 지시
+  - Shell로 동작 구현
+
+#### Thread Pool
+- Thread 생성, 제거 비용을 줄이고자 미리 제작
+- 특정 동작을 하는 Thread를 작업 지시 전까지 대기 시킴
+
+
+---
+
+### Race Condition
+- **Race Condition** : Thread, Process의 **타이밍에 따라 결과 값이 달라질 수 있는 상태**
+- **Critical Section** 
+  - Thread, Process가 **동시에 접근해서는 안되는 곳**
+  - HW 장치를 사용하는 곳, Shared Resource 등
+
+#### 원하지 않는 결과값
+```
+void run()
+{
+  for (int i = 0; i < 10000; i++) cnt++;
+}
+- 4개의 쓰레드를 돌려도, 실제 cnt값은 40000이 나오지 않음
+```
+- Single Thread 동작 원리
+  1) cnt 변수를 레지스터로 복사
+  2) 복사해온 레지스터 값에 1을 더함
+  3) 계산이 완료된 레지스터 값을 메모리 값에 업데이트
+- Multiple Thread 오류상황
+  1) Thread A, B 가 존재할 때 A가 먼저 cnt 변수를 레지스터로 복사
+  2) 복사해온 레지스터 값에 1을 더함
+  3) Thread B가 cnt 변수를 레지스터로 복사
+  4) Thread A가 변화된 cnt 값을 메모리로 업데이트
+- 해결방법
+  1) 지연을 걸어줌 : 함수가 오래걸리면, sleep도 오래 걸어줘야 하기 때문에 유지보수 측면에서 좋지 않음
+    - Thread의 장점이 줄어듬
+  2) Synchronization
+
+#### Thread/Process Synchronization
+- Critical Section을 **동시에 수행하지 않도록 하기 위해 서로 협의**를 맞추는 것
+- 둘이서 하나의 HW 자원을 쓰거나, 하나의 변수를 사용할 때 한명씩 돌아가면서 쓰기 위해 협의를 해야 함
+- 동기화 알고리즘
+  - **mutex** : thread 동기화
+  - **semaphore** : process 동기화
+  - spin lock
+  - barrier
+
+#### mutex_lock
+- **mutex_lock을 얻은 쓰레드 만이 share resource 사용**
+- pthread_mutex_init(&mutex, attr)
+  - mutex 객체 초기화
+  - attr에 NULL을 넣으면 기본 값으로 처리
+- pthread_mutex_destroy(&mutex)
+  - mutex 객체 제거
+- pthread_mutex_lock(&mutex)
+  - mutex lock을 요청하여 얻음
+  - 얻을 수 있을 때 까지 block
+- pthread_mutex_unlock(&mutex)
+  - mutex lock을 반환
+
