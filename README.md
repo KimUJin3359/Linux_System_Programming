@@ -714,11 +714,14 @@ volatile unsigned int *p = (volatile unsigned int *)'주소값';
 - 리눅스에서는 Process 단위가 아닌 Thread 단위 스케쥴링
   - task : 스케쥴러의 
   - Kernel에서 쓰는 Thread와 User Thread 모두 스케쥴링
+  ![프로세스(1)](https://user-images.githubusercontent.com/50474972/113382688-16780b00-93bd-11eb-95b2-e59842192d44.png)
 - Thread Control Block 개념
   - PCB처럼 Thread 별 정보가 저장되어 있음
     - Thread id(tid)
     - Thread State
     - 레지스터 
+  ![프로세스(2)](https://user-images.githubusercontent.com/50474972/113382702-209a0980-93bd-11eb-9c92-fe75b14cb4b6.png)
+
 
 
 #### pthread_create
@@ -756,5 +759,13 @@ pthread_mutex_lock(&lock);
 ...
 pthread_mutex_unlock(&lock);
 ```
+
+#### Mutli Thread vs Multi Process
+
+| | Multi Thread | Mutli Process |
+| --- | --- | --- |
+| Context Switching | 빠름 | 느림 |
+| 통신 | 빠름 | 느림 |
+| 메모리 | 공유 리소스 issue 발생 | 메모리가 독립적으로 보호됨 |
 
 ---
