@@ -459,7 +459,7 @@
 
 #### MMU
 - **가상 메모리를 사용하기위한 주소 장치 제공**
-- **phyiscal memory를 virtual memory로 변환**
+- **virtual memory를 physical memory로 변환**
 - MMU가 없다면
   - 임베디드 커널 포팅 불가
   - OS말고 Firmware를 구현해야 됨
