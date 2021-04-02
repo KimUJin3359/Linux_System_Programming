@@ -168,32 +168,6 @@
 
 ---
 
-### Thread Programming
-- **한 프로세스**에서 특정 함수를 동시에 동작 시키고 싶을 때 사용
-  - Pthread 라이브러리 사용
-  - gcc -lpthread 옵션 사용
-- 쓰레드 메모리 사용
-  - bss, data, text는 같은 공간을 사용
-  - stack, heap은 쓰레드마다 독립적인 공간을 사용
-  ```
-  static 변수는 data, bss영역에 할당되기 때문에 쓰레드 끼리 공유 가능
-  
-  void run()
-  {
-      static int cnt = 0;
-      printf("%d\n", cnt);
-      cnt++;
-  }
-  
-  # 동기화 문제가 발생하는 원인
-    1. CPU-메모리 속도차이 
-      - CPU는 값을 요청하고, 저장하는 명령만 memory에게 함
-      - 메모리에 값을 저장하기 전에 다른 쓰레드에서 값을 변경
-    2. 쓰레드 A, B가 있을 때
-      - A가 print를 하고 있을 때(cnt++ 전)
-      - B도 print하여 같은 값을 출력
-  ```
-
 ### Low Level 파일 입출력
 #### 리눅스에서의 파일
 - **파일, 디렉토리들, 장치들(마우스, 키보드, 메모리)**
@@ -386,6 +360,7 @@
     # 종료
     hd '파일'
     ```
+    
 ---
 
 ### Context Switch
@@ -705,6 +680,32 @@ volatile unsigned int *p = (volatile unsigned int *)'주소값';
     ```
     
 --- 
+
+### Thread Programming
+- **한 프로세스**에서 특정 함수를 동시에 동작 시키고 싶을 때 사용
+  - Pthread 라이브러리 사용
+  - gcc -lpthread 옵션 사용
+- 쓰레드 메모리 사용
+  - bss, data, text는 같은 공간을 사용
+  - stack, heap은 쓰레드마다 독립적인 공간을 사용
+  ```
+  static 변수는 data, bss영역에 할당되기 때문에 쓰레드 끼리 공유 가능
+  
+  void run()
+  {
+      static int cnt = 0;
+      printf("%d\n", cnt);
+      cnt++;
+  }
+  
+  # 동기화 문제가 발생하는 원인
+    1. CPU-메모리 속도차이 
+      - CPU는 값을 요청하고, 저장하는 명령만 memory에게 함
+      - 메모리에 값을 저장하기 전에 다른 쓰레드에서 값을 변경
+    2. 쓰레드 A, B가 있을 때
+      - A가 print를 하고 있을 때(cnt++ 전)
+      - B도 print하여 같은 값을 출력
+  ```
 
 #### Thread 특징
 - Thread의 ID를 따로 관리
