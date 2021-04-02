@@ -5,7 +5,6 @@
 - [컴퓨터 시스템](https://github.com/KimUJin3359/Linux_System_Programming#%EC%BB%B4%ED%93%A8%ED%84%B0-%EC%8B%9C%EC%8A%A4%ED%85%9C)
 - [임베디드 시스템 제어 프로그램](https://github.com/KimUJin3359/Linux_System_Programming#%EC%9E%84%EB%B2%A0%EB%94%94%EB%93%9C-%EC%8B%9C%EC%8A%A4%ED%85%9C-%EC%A0%9C%EC%96%B4-%ED%94%84%EB%A1%9C%EA%B7%B8%EB%9E%A8)
 - [시스템 구성요소](https://github.com/KimUJin3359/Linux_System_Programming#%EC%8B%9C%EC%8A%A4%ED%85%9C-%EA%B5%AC%EC%84%B1%EC%9A%94%EC%86%8C)
-- [Thread Programming](https://github.com/KimUJin3359/Linux_System_Programming#thread-programming)
 - [Low-level 파일 입출력](https://github.com/KimUJin3359/Linux_System_Programming#low-level-%ED%8C%8C%EC%9D%BC-%EC%9E%85%EC%B6%9C%EB%A0%A5)
 - [Process](https://github.com/KimUJin3359/Linux_System_Programming#process)
 - [Context Switch](https://github.com/KimUJin3359/Linux_System_Programming/blob/master/README.md#context-switch)
@@ -14,6 +13,8 @@
 - [Timer](https://github.com/KimUJin3359/Linux_System_Programming/blob/master/README.md#timer)
 - [Signal](https://github.com/KimUJin3359/Linux_System_Programming/blob/master/README.md#signal)
 - [IPC](https://github.com/KimUJin3359/Linux_System_Programming#ipc)
+- [Thread Programming](https://github.com/KimUJin3359/Linux_System_Programming#thread-programming)
+
 ---
 
 ### 용어사전
@@ -171,33 +172,27 @@
 - **한 프로세스**에서 특정 함수를 동시에 동작 시키고 싶을 때 사용
   - Pthread 라이브러리 사용
   - gcc -lpthread 옵션 사용
-
-#### pthread_create
-- pthread_create(thread id, 쓰레드 속성, 함수, 파라미터)
-  - thread id : thread id가 저장될 변수 주소
-  - 쓰레드 속성 : 쓰레드 설정 Null이 default
-  - 함수 : 실행할 함수
-  - 파라미터(void \*) : 함수에 인자 값을 전달해주고 싶을 때 사용
-
-#### pthread_join
-- pthread_join(thread id, thread 리턴 값)
-  - join을 해야 쓰레드가 종료 됨을 기다린 후, 메모리 해제
-  - pthread_join을 하지 않으면, thread가 종료되어도 메모리 해제가 안됨
- 
-#### pthread_cancel
-- pthread_cancel(thread id)
-  - thread 동작을 중지
-
-#### mutex_lock
-- 동시성 에러가 발생할 때 사용
-```
-pthread_mutex_t lock;
-pthread_mutex_lock(&lock);
-...
-pthread_mutex_unlock(&lock);
-```
-
----
+- 쓰레드 메모리 사용
+  - bss, data, text는 같은 공간을 사용
+  - stack, heap은 쓰레드마다 독립적인 공간을 사용
+  ```
+  static 변수는 data, bss영역에 할당되기 때문에 쓰레드 끼리 공유 가능
+  
+  void run()
+  {
+      static int cnt = 0;
+      printf("%d\n", cnt);
+      cnt++;
+  }
+  
+  # 동기화 문제가 발생하는 원인
+    1. CPU-메모리 속도차이 
+      - CPU는 값을 요청하고, 저장하는 명령만 memory에게 함
+      - 메모리에 값을 저장하기 전에 다른 쓰레드에서 값을 변경
+    2. 쓰레드 A, B가 있을 때
+      - A가 print를 하고 있을 때(cnt++ 전)
+      - B도 print하여 같은 값을 출력
+  ```
 
 ### Low Level 파일 입출력
 #### 리눅스에서의 파일
@@ -711,3 +706,54 @@ volatile unsigned int *p = (volatile unsigned int *)'주소값';
     
 --- 
 
+#### Thread 특징
+- Thread의 ID를 따로 관리
+- Thread끼리 우선순위가 존재
+- Thread끼리 사용할 수 있는 stack의 사이즈를 결정할 수 있음
+- 리눅스에서는 Process 단위가 아닌 Thread 단위 스케쥴링
+  - task : 스케쥴러의 
+  - Kernel에서 쓰는 Thread와 User Thread 모두 스케쥴링
+- Thread Control Block 개념
+  - PCB처럼 Thread 별 정보가 저장되어 있음
+    - Thread id(tid)
+    - Thread State
+    - 레지스터 
+
+
+#### pthread_create
+- pthread_create(thread id, 쓰레드 속성, 함수, 파라미터)
+  - thread id : thread id가 저장될 변수 주소
+  - 쓰레드 속성 : 쓰레드 설정 Null이 default
+  - 함수 : 실행할 함수
+  - 파라미터(void \*) : 함수에 인자 값을 전달해주고 싶을 때 사용
+  ```
+  int num = 32;
+  pthread_create(&tid, NULL, function, &num);
+  
+  In function
+  int num = *(int *)ptr;
+  ```
+  
+#### pthread_join
+- pthread_join(thread id, thread 리턴 값)
+  - join을 해야 쓰레드가 종료 됨을 기다린 후, 메모리 해제
+  - pthread_join을 하지 않으면, thread가 종료되어도 메모리 해제가 안됨
+ 
+#### pthread_cancel
+- pthread_cancel(thread id)
+  - thread 동작을 중지
+
+#### pthread_self
+- pthread_t id 값을 얻을 수 있음
+- pthread_t type : unsigned long int
+
+#### mutex_lock
+- 동시성 에러가 발생할 때 사용
+```
+pthread_mutex_t lock;
+pthread_mutex_lock(&lock);
+...
+pthread_mutex_unlock(&lock);
+```
+
+---
