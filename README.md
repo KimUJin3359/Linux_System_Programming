@@ -13,7 +13,7 @@
 - [Virtual Memory](https://github.com/KimUJin3359/Linux_System_Programming/blob/master/README.md#process%EC%9D%98-%EA%B0%80%EC%83%81-%EB%A9%94%EB%AA%A8%EB%A6%AC)
 - [Timer](https://github.com/KimUJin3359/Linux_System_Programming/blob/master/README.md#timer)
 - [Signal](https://github.com/KimUJin3359/Linux_System_Programming/blob/master/README.md#signal)
-
+- [IPC](https://github.com/KimUJin3359/Linux_System_Programming#ipc)
 ---
 
 ### 용어사전
@@ -635,23 +635,23 @@ pthread_mutex_unlock(&lock);
 ---
 
 ### IPC
-- Inter Process Communication
+- **Inter Process Communication**
 - 동기화 처리 필요
-  - 공유 리소스(파일)로 통신
+  - **공유 리소스**(파일)로 통신
   - Process끼리 Shared memory 사용
     - 두 프로세서가 한 파일을 맵핑
     - 한 곳에 값이 바뀌면 모두 내용이 바뀜
     - 공유하고 싶은 값이 있다면 맵핑한 Address에 값을 적으면 됨
 - 동기화 처리 필요 없음
   - Process와 Process 직접적으로 전송
-  - Mail box, Socket, Pipe 등 사용
+  - **Mail box, Socket, Pipe** 등 사용
 
 #### mmap
 - 프로세스와 파일의 특징
-  - 프로세스마다 VIrtual Address Space를 가짐
+  - 프로세스마다 **VIrtual Address Space를 가짐**
     - 독립적인 메모리 공간을 가짐
-    - 공유 리소스를 통한 값을 전달해야함
-  - 파일은 모든 프로세스가 접근 가능(shared resource)
+    - **공유 리소스를 통한 값을 전달**해야함
+  - **파일은 모든 프로세스가 접근 가능**(shared resource)
 - mmap (man 2 mmap)
   - 가상 메모리에 매핑
   - void \*mmap(void \*addr, size_t length, int prot, int flags, int fd, off_t offset);
@@ -677,7 +677,7 @@ GPIO1 = base_addr + 0x4;
 
 *GPIO0 = 0xABCD
 ```
-- 컴파일러 최적화
+- **컴파일러 최적화**
 ```
 while (1)
 {
@@ -691,7 +691,7 @@ while (1)
 
 volatile unsigned int *p = (volatile unsigned int *)'주소값';
 ```
-- 비트 연산(Bit masking)
+- **비트 연산(Bit masking)**
   - reset : 어떠한 비트를 0으로 만듬
     - & 연산자 사용
     ```
