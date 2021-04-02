@@ -589,6 +589,10 @@ pthread_mutex_unlock(&lock);
 - Interrupt 발생 시 예약된 함수(ISR)가 동작
 - Interrupt Handler(ISR) : interrupt에 대한 처리 방법
   - Handler를 지정해주지 않으면, 커널 내부에서 Default 동작을 수행함
+- 주의
+  - 일반 코드가 중지될 수 있음
+  - ISR과 일반 함수 모두 같은 전역변수를 사용하는 경우, 코드에 버그가 발생할 수 있음
+  - 도중에 Interrupt가 발생하면 안되는 곳에는 Interrupt Disable 처리를 해야 함
 
 #### Signal
 - Thread, Process에게 정보를 전달하는 신호
@@ -600,10 +604,110 @@ pthread_mutex_unlock(&lock);
 #### Signal API
 - signal('시그널 번호', '핸들러 이름');
 - 시그널 번호는 매크로로 사용해도 됨(전부 등록되어 있음)
-- Nestted Interrupt
+
+#### Nestted Interrupt
   - ARM
     - 인터럽트에 우선순위가 존재 ( 낮은번호가 우선순위가 더 높음 )
-    - 우선순위가 높은 Interrupt 발생 시 Nested Interrupt
+    - 우선순위가 높은 Interrupt 발생 시 : 진행하던 Interrupt를 멈추고, 다시 Interrupt로 진입
+    - 우선순위가 같은 Interrupt 발생 시 : 진행하던 Interrupt를 끝내고, 이어서 Interrupt로 진행
   - Linux
     - 우선순위가 존재하지 않음
     - 인터럽트 동작 중 인터럽트 발생 시 Nested Interrupt
+
+#### Interrupt Enable/Disable
+- man 3 page
+- sigset_t
+  - block 할 signal 마스크
+- sigfillset
+  - sigset에 전부 masking
+- sigemptyset
+  - sigset의 masking을 전부 비움
+- sigaddset/sigdelset
+- sigprocmask
+  - sigprocmask(int how, const old_kernel_sigset_t *set, old_kernel_sigset_t *oldset)
+  - how
+    - SIG_BLOCK : 기존에 블록된 시그널이 있다면 두 번째 인자는 set의 시그널을 추가
+    - SIG_UNBLOCK : 기존의 블록된 시그널에서 set의 시그널을 제거
+    - SIG_SETMASK : 기존의 블록된 시그널을 전부 제거시키고 새로운 set의 시그널을 블록
+  - set : 설정할 시그널
+  - oldeset : 이 전에 블록된 시그널들을 저장
+ 
+---
+
+### IPC
+- Inter Process Communication
+- 동기화 처리 필요
+  - 공유 리소스(파일)로 통신
+  - Process끼리 Shared memory 사용
+    - 두 프로세서가 한 파일을 맵핑
+    - 한 곳에 값이 바뀌면 모두 내용이 바뀜
+    - 공유하고 싶은 값이 있다면 맵핑한 Address에 값을 적으면 됨
+- 동기화 처리 필요 없음
+  - Process와 Process 직접적으로 전송
+  - Mail box, Socket, Pipe 등 사용
+
+#### mmap
+- 프로세스와 파일의 특징
+  - 프로세스마다 VIrtual Address Space를 가짐
+    - 독립적인 메모리 공간을 가짐
+    - 공유 리소스를 통한 값을 전달해야함
+  - 파일은 모든 프로세스가 접근 가능(shared resource)
+- mmap (man 2 mmap)
+  - 가상 메모리에 매핑
+  - void \*mmap(void \*addr, size_t length, int prot, int flags, int fd, off_t offset);
+  - 맵핑 할 주소 지정(addr)
+    - 직접 주소 지정
+    - NULL : 자동 선택, 맵핑된 주소 반환받음
+  - 권한 지정(prot) : PROT_READ, PROT_WRITE, PROT_EXEC, PROT_NONE
+  - flags : MAP_SHARED ...
+  - offset : Page 사이즈의 배수로 지정
+  - 메모리 값을 수정 시
+    - 파일 내용도 함께 수정됨
+
+#### Embedded에서 활용
+```
+#define BASE_ADDR ' '
+
+int fd = open("/dev/mem", O_RDWR | O_SYNC);
+base_addr = mmap(0, LENGTH, PROT_READ | PROT_WRITE, MAP_SHARED, fd, BASE_ADDR);
+
+GPIO0 = base_addr;
+GPIO1 = base_addr + 0x4;
+...
+
+*GPIO0 = 0xABCD
+```
+- 컴파일러 최적화
+```
+while (1)
+{
+  *p = 1;
+  sleep(1);
+  *p = 0;
+}
+위와 같은 코드를 실행하면, compiler에서 최적화하여
+*p = 1로 바꿔줌
+이를 방지하기 위해 volatile 사용
+
+volatile unsigned int *p = (volatile unsigned int *)'주소값';
+```
+- 비트 연산(Bit masking)
+  - reset : 어떠한 비트를 0으로 만듬
+    - & 연산자 사용
+    ```
+      001001
+    & 110111
+    --------
+      000001
+    ```
+  - set : 어떠한 비트를 1로 만듬
+    - | 연산자 사용
+    ```
+      001000
+    | 000010
+    --------
+      001010
+    ```
+    
+--- 
+
